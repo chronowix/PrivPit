@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum PostVisibility{
+  PUBLIC
+  REQUEST
+  PASSWORD
+}
+
+enum RequestStatus{
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User{
+  id  Int @id @default(autoincrement())
+  username  String @unique
+  pwdHash String
+  createdAt DateTime  @default(now())
+
+  posts Post[]
+  viewRequests  ViewRequest[]
+}
+
+model Post{
+  id  Int @id @default(autoincrement())
+  authorId  Int
+  title String
+  content String
+  visibility  PostVisibility
+  pwdHash String?
+  createdAt DateTime  @default(now())
+
+  author  User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  requests  ViewRequest[]
+
+  @@index([authorId])
+}
+
+model ViewRequest{
+  id  Int @id @default(autoincrement())
+  postId  Int
+  userId  Int
+  status  RequestStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+
+  post  Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
